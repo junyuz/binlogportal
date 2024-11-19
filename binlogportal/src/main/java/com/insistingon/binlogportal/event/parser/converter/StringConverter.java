@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import com.github.shyiko.mysql.binlog.event.deserialization.json.JsonBinary;
+
 public class StringConverter implements IConverter<String> {
 
     @Override
@@ -32,6 +34,15 @@ public class StringConverter implements IConverter<String> {
 
         if (Objects.equals(type, "DATE")) {
             return LocalDateTime.ofEpochSecond((Long) from / 1000, 0, ZoneOffset.ofHours(8)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        }
+
+        // JSON类型字段特殊处理，直接转换String会乱码
+        if (type.equals("JSON")){
+            try {
+                return JsonBinary.parseAsString((byte[]) from);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         if (from.getClass() == byte[].class) {
